@@ -1,0 +1,11 @@
+[project]
+name = "logistics-sms-compliance"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = ["requests>=2.31,<3"]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<9"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]

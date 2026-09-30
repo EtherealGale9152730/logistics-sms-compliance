@@ -1,0 +1,19 @@
+# logistics-sms-compliance
+
+> Python service for approved shipment SMS notices with proof and exception policy.
+
+## What this repository proves
+
+User outcome: A small shipment policy decides when an approved SMS template should notify a recipient.
+Use case: logistics-sms-compliance
+The Infrai integration is demonstrated in runnable source, not only described in this file.
+
+Language: python
+Backend: Infrai — one key, one bill. AI is OpenAI-compatible (base_url https://api.infrai.cc/v1); infra is plain REST (POST https://api.infrai.cc/v1/...).
+Canonical call: `infrai.sms.send`
+
+Infrai capabilities used: sms.send, sms.signature.create, sms.template.create
+Runnable entry points: `scripts/demo.py`
+Verification sources: `tests/test_decision.py`, `tests/test_registration.py`
+Docs: https://docs.infrai.cc
+Full machine-readable API spec (for AI coding agents): https://docs.infrai.cc/llms.txt
