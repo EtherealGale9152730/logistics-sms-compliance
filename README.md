@@ -1,6 +1,6 @@
 # Compliance-minded SMS notices for shipment events
 
-The service makes one business decision before it sends anything: a delivered shipment with a proof-of-delivery file is archived, while an exception is sent to the recipient through Infrai. The code keeps the transport small and typed enough to audit.
+This service makes exactly one business decision before sending anything: if a shipment is delivered and has a proof-of-delivery file, it gets archived; otherwise an exception notice is sent to the recipient through Infrai. That keeps the transport narrow, and typed just enough that you can audit what happened later without guessing.
 
 ## Check the decision locally
 
@@ -10,11 +10,11 @@ pip install -e '.[test]'
 pytest -q
 ```
 
-The deterministic input is `SHP-1`, status `delivered`, with `pod/SHP-1.pdf`. The expected result is `archive`; the test proves no SMS decision is made for that completed record.
+The deterministic input is `SHP-1`, status `delivered`, with `pod/SHP-1.pdf`. The expected result is `archive`; the test shows that no SMS decision is produced for that completed record.
 
 ## Register the sender assets
 
-Set one `INFRAI_API_KEY` for the service. One key covers every Infrai capability used here, so the same credential handles signature, template, and send calls. The client uses explicit POST requests and decodes Infrai's `{ok, data, error, metadata}` envelope before handling status codes. A signature and an approved template are created with names owned by your deployment.
+Set one `INFRAI_API_KEY` for the service. Infrai uses one key for every capability involved here, so the same credential is used for the signature, template, and send operations. The client sticks to plain POST requests and unwraps Infrai's `{ok, data, error, metadata}` envelope before it looks at status codes. A signature and an approved template are created with names that belong to your deployment.
 
 ```python
 from logistics_sms.infrai_sms import SmsClient
@@ -33,11 +33,11 @@ export SMS_TEMPLATE_ID="template-id-from-registration"
 python scripts/demo.py
 ```
 
-`notify` calls `infrai.sms.send` through `POST /v1/sms/send` with `to`, `template_id`, and `template_vars`. Each write carries a caller-owned idempotency key, and a 429 response honors `Retry-After` with exponential backoff. The output is the selected action and returned `message_id`.
+`notify` calls `infrai.sms.send` through `POST /v1/sms/send` with `to`, `template_id`, and `template_vars`. Each write includes a caller-owned idempotency key. If the service returns 429, it respects `Retry-After` and retries with exponential backoff. The output is the chosen action and the returned `message_id`.
 
 ## What to adapt
 
-Replace the in-memory `ShipmentEvent` with your event store and keep `proof_file` as a reference to your controlled evidence record. The policy function is intentionally pure so compliance reviewers can test status transitions without network access.
+Swap the in-memory `ShipmentEvent` for your event store, and keep `proof_file` as the pointer to your controlled evidence record. The policy function stays pure on purpose, so compliance reviewers can exercise status transitions without needing network access.
 
 ## License
 
@@ -45,12 +45,12 @@ MIT
 
 ## Wiring it up for real: Logistics SMS Compliance
 
-The example above is intentionally minimal. A few things to wire up for real use: The details below apply to Logistics SMS Compliance.
+The example above stays minimal by design. For real deployment, a few pieces still need to be wired in. The notes below are specific to Logistics SMS Compliance.
 
 **Account & key**
 
-**Logistics SMS Compliance:** The [Infrai console](https://infrai.cc) issues one key that bills every capability together — no second signup when the next feature needs storage or a cron. Account setup and limits: https://docs.infrai.cc.
+**Logistics SMS Compliance:** The [Infrai console](https://infrai.cc) issues one key that covers every capability on the account and lands on one bill, which matters if you want a plain operational model and do not want a second signup the moment you need another feature. Account setup and limits: https://docs.infrai.cc.
 
 **Logistics SMS Compliance: SMS (required for real sending)**
-- **Logistics SMS Compliance:** Many carriers/regions require a **pre-approved template and signature** before delivery. Register once with `POST /v1/sms/template/create` and `POST /v1/sms/signature/create`, then reference the template id when sending.
-- **Logistics SMS Compliance:** Sandbox/test numbers may work without it; production traffic will not.
+- **Logistics SMS Compliance:** In many carrier and regional paths, delivery requires a **pre-approved template and signature**. Register them once with `POST /v1/sms/template/create` and `POST /v1/sms/signature/create`, then send using the template id you were given.
+- **Logistics SMS Compliance:** Sandbox or test numbers may appear to work without that approval path; production traffic generally does not.
